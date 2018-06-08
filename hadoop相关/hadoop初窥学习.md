@@ -149,7 +149,25 @@ export JAVA_HOME=D:\JDK\Java\jdk1.8.0_101
  - 概念：在执行mapreduce过程中，可能Mapper之间需要通信。在数据量不大的情况下，可以通过分布式缓存，将需要通信的文件从HDFS加载到本地内存中。笔者的个人理解，这实际上是一种类似于threadlocal的方式。
  - 发生时间：发生在job执行任务之前，保证能够读取需要的内容。本机上每个dataNode子节点都会缓存一份相同的共享数据。分布式缓存一般适用于较小的配置文件等等情形，如果文件过大，可以将文件分批缓存，重复执行作业
  - 使用方法:版本不同使用的方法不一致，只在这里提一下，可以使用#+名字的方式为缓存的文件设置别名。
- - 
+ ### 编码方法执行顺序
+1. setUp():本方法是在mapReduce过程中最先执行的。通常用于mapTask的一些预处理过程，比如创建一个容器，如List
+1. map()：最常重写的方法，接收输入分片的一次recordReader读取的k-v键值对，然后进行map处理
+1. cleanup():本方法类似于finnaly，最后执行，用于收尾工作，如关闭流、释放资源，以及context.write写入数据
+1. run(),在下面的代码块中可以看出，默认的run方法实际上是把1.2.3方法整合起来：先直接调用setup方法，然后每一次数据片调用map方法进行映射；最后调用cleanup
+```
+public void run(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
+        this.setup(context);
+
+        try {
+            while(context.nextKeyValue()) {
+                this.map(context.getCurrentKey(), context.getCurrentValue(), context);
+            }
+        } finally {
+            this.cleanup(context);
+        }
+
+    }
+```
 
 ---
 
@@ -158,7 +176,14 @@ export JAVA_HOME=D:\JDK\Java\jdk1.8.0_101
 - **特点**：这是一个抽象类，没有实现方法体。用于文件读取输入时的格式。默认是采用TextInputFormat，即以**文本行的形式读取数据，每一行为一个<key,value>键值对**。一般是<LongWritable,Text>，即行（偏移量）数和对应行中的文本。
 - **核心参数及意义**：
     - InputSplits:这个参数值指的是文件被分成块的默认大小，一般是64MB;其List中包含的数量则是文件被分成块的数量。我们知道如果不是CPU密集型的mapReduce操作，那么一个块文件会对应MapTask   
-    - 
+    - RecordReader：如果说InputSplit是处理文件的分片，那么RecordReader则是处理一个InputSplit(分片)中的key-value键值对，使其能正确的被读出来。默认实现中，是以行偏移量为key,行内容为value。从下面代码段可以看出来，**默认的k-v类型是LongWriteable-Text**
+    ```
+    public class LineRecordReader extends RecordReader<LongWritable, Text> {  
+  private static final Log LOG = LogFactory.getLog(LineRecordReader.class);  
+  
+  private LongWritable key = null;  
+  private Text value = null;  
+    ```
 
 
  
