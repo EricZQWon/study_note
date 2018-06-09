@@ -50,7 +50,7 @@
 
 #### 配置文件相关
 
- - **core-site.xml:**这个笔者只配置了一个参数，需要注意的是网上搜到的大多文章默认给的配置是localhost:9000，如果直接搬运过去，可能在后面输入hdfs namenode -format的时候会抛出call from xxxx/ to localhost:9000 refuse 的异常，因为这里的localhost实际上应该替换成自己电脑的hostname，在cmd中输入hostname即可查看。**这一步这样做实际上是为了搭建伪分布式**
+ - <span id="core-site">**core-site.xml:**</span>这个笔者只配置了一个参数，需要注意的是网上搜到的大多文章默认给的配置是localhost:9000，如果直接搬运过去，可能在后面输入hdfs namenode -format的时候会抛出call from xxxx/ to localhost:9000 refuse 的异常，因为这里的localhost实际上应该替换成自己电脑的hostname，在cmd中输入hostname即可查看。**这一步这样做实际上是为了搭建伪分布式**
 
 
   
@@ -101,7 +101,7 @@ export JAVA_HOME=D:\JDK\Java\jdk1.8.0_101
 <configuration>
     <!-- Site specific YARN configuration properties -->
     <property>
-        //这一步是强行设置，规避HDFS要求备份三份的要求，不然DataNode小于3会提示//报错
+        //这一步是强行设置，规避HDFS要求备份三份的要求，不然//DataNode小于3会提示报错
         <name>dfs.replication</name>
 
         <value>1</value>
@@ -189,6 +189,14 @@ public void run(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws
   private LongWritable key = null;  
   private Text value = null;  
     ```
+
+### FileSystem
+- 构造：通过静态工厂get()获得实例，有三个重载
+- 重要方法：get()获得实例，open()打开文件I/O流，可以读写HDFS文件，这个I/O流支持前面提到的随意读写文件，可以输入一个文件的绝对位置来对文件进行访问；而不是像普通的java.io中的skip只能访问当前位置之后的相对位置。+
+- 搭配:在上面通过open获得流之后，通过IOUtils封装的方法可以方便的进行读写操作
+### Configuration
+- 含义：封装了客户端或服务端设定的配置。默认构造实现是前面的<a href="#core-site">core-site.xml</a>中的配置
+
 
 
  
