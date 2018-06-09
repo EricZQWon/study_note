@@ -75,6 +75,7 @@ public class ReducerTest extends Reducer<Text, IntWritable, Text, IntWritable> {
 
 ```
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -95,7 +96,6 @@ public class Runner {
 			job.setJarByClass(Runner.class);
 			job.setMapperClass(MapperTest.class);
 			job.setReducerClass(ReducerTest.class);
-
 			// 输出key类型
 			job.setOutputKeyClass(Text.class);
 			// 输出value类型
@@ -103,8 +103,13 @@ public class Runner {
 			//设置输入输出路径
 			Path inputPath = new Path(inpath);
 			FileInputFormat.addInputPath(job, inputPath);
-			FileOutputFormat.setOutputPath(job, new Path("D:\\output"));
-			System.exit(job.waitForCompletion(true) ? 0 : 1);
+			//确认文件夹是否已存在，如果存在，则执行删除
+			Path outPath=new Path("D:\\out");
+			FileSystem fs=FileSystem.get(conf);
+			if (fs.exists(outPath))
+				fs.delete(outPath,true);
+			FileOutputFormat.setOutputPath(job,outPath);
+			System.exit(job.waitForCompletion(false) ? 0 : 1);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -114,7 +119,9 @@ public class Runner {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-	}
+		}
+
 }
+
 
 ```
