@@ -139,8 +139,7 @@ export JAVA_HOME=D:\JDK\Java\jdk1.8.0_101
 
 	
  3. Shuffle（交换）:通过交换，在前面步骤中相同key值的数据通过交换，从不同的mapper中进入相同的partition
- 4. Partition+Reduce（规约）：
-
+ 4. Partition(切分）+Reduce（规约）：partition决定k-v分配到哪一个reducer，因为我们的程序可能不止一个reducer。Hadoop默认使用Hash取模的方法。因此k-v的hashcode相同的会被分到同一个partition下，而partition=reducer=1：1.
 	
 
  - partition发生在reduce之前。在默认状态下，如果有key值，那么输出结果会按照升序进行排序。相同的key值会进入同一个partition中。
@@ -175,7 +174,7 @@ public void run(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws
 ### InputFormat
 - **特点**：这是一个抽象类，没有实现方法体。用于文件读取输入时的格式。默认是采用TextInputFormat，即以**文本行的形式读取数据，每一行为一个<key,value>键值对**。一般是<LongWritable,Text>，即行（偏移量）数和对应行中的文本。
 - **核心参数及意义**：
-    - InputSplits:这个参数值指的是文件被分成块的默认大小，一般是64MB;其List中包含的数量则是文件被分成块的数量。我们知道如果不是CPU密集型的mapReduce操作，那么一个块文件会对应MapTask   
+    - InputSplits:这个参数值指的是文件被分成块的默认大小，一般是64MB;其List中包含的数量则是文件被分成块的数量。我们知道如果不是CPU密集型的mapReduce操作，那么一个块文件会对应MapTask。如果不希望一个文件被切分成多个切片，那么可以覆写isSplitalbe方法，直接放回false，那么一个文件将不会被切分，而是整个文件被一个mapTask处理   
     - RecordReader：如果说InputSplit是处理文件的分片，那么RecordReader则是处理一个InputSplit(分片)中的key-value键值对，使其能正确的被读出来。默认实现中，是以行偏移量为key,行内容为value。从下面代码段可以看出来，**默认的k-v类型是LongWriteable-Text**
     ```
     public class LineRecordReader extends RecordReader<LongWritable, Text> {  
