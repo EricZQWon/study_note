@@ -153,12 +153,14 @@ export JAVA_HOME=D:\JDK\Java\jdk1.8.0_101
     - 解决方案：
         1. 第一种情况，按照前面提到的，将localhost改为自己的主机名(*hostname*)即可
         1. 第二种情况，首先检查*Windows 防火墙*是否关闭，或者是否开放了入站规则。其次，确认你已经成功启动hadoop，使用jps命令查看；然后，使用netstat -an|findstr "你core-site中配置的端口号" 命令查看是否端口已经建立或监听中。关键部分来了,笔者在原来的代码中，生成的URI是这样的,找了无数方法都连不上
-     ```
+     ```java
     String uri ="hdfs://dell-pc:9000/test.txt";
 
     ```
-        后面通过netstat -an|findstr "9000",发现建立连接的两个端口是192.168.181.1:9000，因此将uri改成了如下，问题解决。
-    ```
+     后面通过netstat -an|findstr "9000",发现建立连接的两个端口是192.168.181.1:9000，因此将uri改成了如下，问题解决。
+
+
+    ```java
     String uri =  "hdfs://192.168.181.1:8080/test.txt";
 
     ```
@@ -192,9 +194,9 @@ export JAVA_HOME=D:\JDK\Java\jdk1.8.0_101
  ### 编码方法执行顺序
 1. setUp():本方法是在mapReduce过程中最先执行的。通常用于mapTask的一些预处理过程，比如创建一个容器，如List
 1. map()：最常重写的方法，接收输入分片的一次recordReader读取的k-v键值对，然后进行map处理
-1. cleanup():本方法类似于finnaly，最后执行，用于收尾工作，如关闭流、释放资源，以及context.write写入数据
-1. run(),在下面的代码块中可以看出，默认的run方法实际上是把1.2.3方法整合起来：先直接调用setup方法，然后每一次数据片调用map方法进行映射；最后调用cleanup
-```
+2. cleanup():本方法类似于finnaly，最后执行，用于收尾工作，如关闭流、释放资源，以及context.write写入数据
+3. run(),在下面的代码块中可以看出，默认的run方法实际上是把1.2.3方法整合起来：先直接调用setup方法，然后每一次数据片调用map方法进行映射；最后调用cleanup
+```java
 public void run(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
         this.setup(context);
 
@@ -217,7 +219,7 @@ public void run(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws
 - **核心参数及意义**：
     - InputSplits:这个参数值指的是文件被分成块的默认大小，一般是128MB;其List中包含的数量则是文件被分成块的数量。我们知道如果不是CPU密集型的mapReduce操作，那么一个块文件会对应MapTask。如果不希望一个文件被切分成多个切片，那么可以覆写isSplitalbe方法，直接放回false，那么一个文件将不会被切分，而是整个文件被一个mapTask处理   
     - RecordReader：如果说InputSplit是处理文件的分片，那么RecordReader则是处理一个InputSplit(分片)中的key-value键值对，使其能正确的被读出来。默认实现中，是以行偏移量为key,行内容为value。从下面代码段可以看出来，**默认的k-v类型是LongWriteable-Text**
-    ```
+    ```java
     public class LineRecordReader extends RecordReader<LongWritable, Text> {  
   private static final Log LOG = LogFactory.getLog(LineRecordReader.class);  
   
