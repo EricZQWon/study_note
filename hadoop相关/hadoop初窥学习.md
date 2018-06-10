@@ -68,7 +68,7 @@
 
 #### 配置文件相关
 
- - <span id="core-site">core-site.xml:</span>这个笔者只配置了一个参数，需要注意的是网上搜到的大多文章默认给的配置是localhost:9000，如果直接搬运过去，可能在后面输入hdfs namenode -format的时候会抛出call from xxxx/ to localhost:9000 refuse 的异常，因为这里的localhost实际上应该替换成自己电脑的hostname，在cmd中输入hostname即可查看。**这一步这样做实际上是为了搭建伪分布式**
+ - <p id="core-site">core-site.xml:</p>这个笔者只配置了一个参数，需要注意的是网上搜到的大多文章默认给的配置是localhost:9000，如果直接搬运过去，可能在后面输入hdfs namenode -format的时候会抛出call from xxxx/ to localhost:9000 refuse 的异常，因为这里的localhost实际上应该替换成自己电脑的hostname，在cmd中输入hostname即可查看。**这一步这样做实际上是为了搭建伪分布式**
 
 
   
