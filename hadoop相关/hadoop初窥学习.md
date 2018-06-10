@@ -2,6 +2,8 @@
 
 - [Hadoop核心组件 ver 1.2x](#hadoop核心组件-ver-12x)
     - [Hive](#hive)
+    - [Hbase](#hbase)
+    - [Zookeeper](#zookeeper)
     - [HDFS](#hdfs)
     - [MapReduce](#mapreduce)
     - [Hadoop Windows下安装踩过的坑](#hadoop-windows下安装踩过的坑)
@@ -10,6 +12,7 @@
 - [Hadoop执行相关](#hadoop执行相关)
     - [Hadoop执行过程](#hadoop执行过程)
     - [Hadoop的分布式缓存](#hadoop的分布式缓存)
+    - [编码方法执行顺序](#编码方法执行顺序)
 - [Hadoop核心类](#hadoop核心类)
     - [InputFormat](#inputformat)
     - [FileSystem](#filesystem)
@@ -53,6 +56,20 @@
 
 
  - 概念：Hadoop的计算框架。提供一种框架，用于将分布式系统的读写操作抽象成**一个数据集**（由键值对组成）的计算。大多数的计算任务可以被抽象为：映射（分解）Map和规约Reduce过程。类似于JDK自带的Fork/Join框架
+ - 执行流程：
+```mermaid
+graph LR
+input-->map
+map-->产生文件是否溢出缓存
+产生文件是否溢出缓存-->是,溢写到磁盘
+产生文件是否溢出缓存-->否,随reduce加入内存
+是,溢写到磁盘-->超过3个文件combine组合
+超过3个文件combine组合-->shuffle
+否,随reduce加入内存-->reduce
+shuffle-->reduce
+
+```
+
  - **容错机制**：（1）**尝试重试**，最多重试4次，超过则放弃 （2）**推测执行**，如果出现一个节点的计算远远比其他节点慢，那么新建一个节点执行同样的任务。谁先执行完，则放弃另外一个节点。这样防止不会因为单个节点故障而拖累整个任务的进度。
  - 适用： 批量大文件查询、离线的使用场景（用户不需要等待，因为时间很长）
  - 重要名词：Job&Task，JobTracker,TaskTracker **注：这些在2.0+被移除，而交付由Yarn平台的ResourceManager统一管理，同时2.0在支持MapReduce之外还提供对Spark/Storm的支持**
@@ -187,11 +204,11 @@ export JAVA_HOME=D:\JDK\Java\jdk1.8.0_101
 
  - partition发生在reduce之前。在默认状态下，如果有key值，那么输出结果会按照升序进行排序。相同的key值会进入同一个partition中。
  - reduce：规约输出最终结果的过程，在大数据量情况下不宜设计过少。partition，reducer和最终的输出文件(part-r-000XX)数量是1:1:1关系 
-###Hadoop的分布式缓存
+### Hadoop的分布式缓存
  - 概念：在执行mapreduce过程中，可能Mapper之间需要通信。在数据量不大的情况下，可以通过分布式缓存，将需要通信的文件从HDFS加载到本地内存中。笔者的个人理解，这实际上是一种类似于threadlocal的方式。
  - 发生时间：发生在job执行任务之前，保证能够读取需要的内容。本机上每个dataNode子节点都会缓存一份相同的共享数据。分布式缓存一般适用于较小的配置文件等等情形，如果文件过大，可以将文件分批缓存，重复执行作业
  - 使用方法:版本不同使用的方法不一致，只在这里提一下，可以使用#+名字的方式为缓存的文件设置别名。
- ### 编码方法执行顺序
+### 编码方法执行顺序
 1. setUp():本方法是在mapReduce过程中最先执行的。通常用于mapTask的一些预处理过程，比如创建一个容器，如List
 1. map()：最常重写的方法，接收输入分片的一次recordReader读取的k-v键值对，然后进行map处理
 2. cleanup():本方法类似于finnaly，最后执行，用于收尾工作，如关闭流、释放资源，以及context.write写入数据
