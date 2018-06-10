@@ -1,3 +1,21 @@
+
+
+- [Hadoop核心组件 ver 1.2x](#hadoop核心组件-ver-12x)
+    - [Hive](#hive)
+    - [HDFS](#hdfs)
+    - [MapReduce](#mapreduce)
+    - [Hadoop Windows下安装踩过的坑](#hadoop-windows下安装踩过的坑)
+        - [配置文件相关](#配置文件相关)
+        - [抛出的异常类型以及处理方法](#抛出的异常类型以及处理方法)
+- [Hadoop执行相关](#hadoop执行相关)
+    - [Hadoop执行过程](#hadoop执行过程)
+    - [Hadoop的分布式缓存](#hadoop的分布式缓存)
+- [Hadoop核心类](#hadoop核心类)
+    - [InputFormat](#inputformat)
+    - [FileSystem](#filesystem)
+    - [Configuration](#configuration)
+
+
 ## Hadoop核心组件 ver 1.2x
 
 
@@ -126,7 +144,24 @@ export JAVA_HOME=D:\JDK\Java\jdk1.8.0_101
     </property>
 </configuration>
 ```
+#### 抛出的异常类型以及处理方法
 
+1. java.net.ConnectException: Connection refused: no further information
+    - 出处：
+        1. 前面配置文件过程中[core-site](#core-site)中的主机名没有配置成hostname而是照抄的localhost等等
+        1. 另外一种情况则是笔者昨天刚遇到的，我尝试做一个hdfs文件读取并使用FSDataInputStream特性seek()的demo。但是几行代码编写完之后，运行时却抛出了异常。
+    - 解决方案：
+        1. 第一种情况，按照前面提到的，将localhost改为自己的主机名(*hostname*)即可
+        1. 第二种情况，首先检查*Windows 防火墙*是否关闭，或者是否开放了入站规则。其次，确认你已经成功启动hadoop，使用jps命令查看；然后，使用netstat -an|findstr "你core-site中配置的端口号" 命令查看是否端口已经建立或监听中。关键部分来了,笔者在原来的代码中，生成的URI是这样的,找了无数方法都连不上
+     ```
+    String uri ="hdfs://dell-pc:9000/test.txt";
+
+    ```
+        后面通过netstat -an|findstr "9000",发现建立连接的两个端口是192.168.181.1:9000，因此将uri改成了如下，问题解决。
+    ```
+    String uri =  "hdfs://192.168.181.1:8080/test.txt";
+
+    ```
 ------
 
 
