@@ -36,9 +36,11 @@
  - **与关系型数据库区别**：放弃事务的特性，追求更高的扩展。并且提供对数据的随机读写和实时的访问，实现对表数据的读写功能。另外关系型数据的另外一个瓶颈是：<p id="bottonNeck">**寻址读写速度的提升远低于传输速度的提升**</p>；类似于MySQL的InnoDB引擎采用B+树作为数据结构，主要瓶颈是对硬盘读写的寻址速度。而大数据的流处理瓶颈则是数据的硬盘带宽（传输速度）
  
  ### Zookeeper
- 
-
- - 功能：提供分布式一致性
+ - 功能：作为Hadoop的分布式协调服务，提供分布式一致性
+ - 起因：分布式系统在通信时一种固有问题 _“部分失败”_，即消息的发送者并不能知道接受者是否正常、正确的收到了消息。
+ - 特点:
+    1. 简单，核心是一个精简的文件系统，提供排序和通知功能
+    1. 
 ### HDFS
 
  - 概念：Hadoop的文件系统，将所有文件以块的形式存储，默认块大小是64MB（ver 2.0+是128MB 可在hdfs-site.xml中修改dfs-block-size的属性）
@@ -162,7 +164,7 @@ export JAVA_HOME=D:\JDK\Java\jdk1.8.0_101
 </configuration>
 ```
 #### 抛出的异常类型以及处理方法
-
+d 
 1. java.net.ConnectException: Connection refused: no further information
     - 出处：
         1. 前面配置文件过程中[core-site](#core-site)中的主机名没有配置成hostname而是照抄的localhost等等
@@ -175,7 +177,6 @@ export JAVA_HOME=D:\JDK\Java\jdk1.8.0_101
 
     ```
      后面通过netstat -an|findstr "9000",发现建立连接的两个端口是192.168.181.1:9000，因此将uri改成了如下，问题解决。
-
 
     ```java
     String uri =  "hdfs://192.168.181.1:8080/test.txt";
@@ -207,13 +208,14 @@ export JAVA_HOME=D:\JDK\Java\jdk1.8.0_101
 ### Hadoop的分布式缓存
  - 概念：在执行mapreduce过程中，可能Mapper之间需要通信。在数据量不大的情况下，可以通过分布式缓存，将需要通信的文件从HDFS加载到本地内存中。笔者的个人理解，这实际上是一种类似于threadlocal的方式。
  - 发生时间：发生在job执行任务之前，保证能够读取需要的内容。本机上每个dataNode子节点都会缓存一份相同的共享数据。分布式缓存一般适用于较小的配置文件等等情形，如果文件过大，可以将文件分批缓存，重复执行作业
- - 使用方法:版本不同使用的方法不一致，只在这里提一下，可以使用#+名字的方式为缓存的文件设置别名。
+ - 使用方法：直接可以调用*job.addCacheFile(URI uri)*/*addCachedArchives()*.可以使用#+名字的方式为缓存的文件设置别名。
 ### 编码方法执行顺序
 1. setUp():本方法是在mapReduce过程中最先执行的。通常用于mapTask的一些预处理过程，比如创建一个容器，如List
 1. map()：最常重写的方法，接收输入分片的一次recordReader读取的k-v键值对，然后进行map处理
 2. cleanup():本方法类似于finnaly，最后执行，用于收尾工作，如关闭流、释放资源，以及context.write写入数据
 3. run(),在下面的代码块中可以看出，默认的run方法实际上是把1.2.3方法整合起来：先直接调用setup方法，然后每一次数据片调用map方法进行映射；最后调用cleanup
-```java
+
+```java{.line-numbers}
 public void run(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context) throws IOException, InterruptedException {
         this.setup(context);
 
