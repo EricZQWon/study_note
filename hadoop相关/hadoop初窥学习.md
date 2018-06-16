@@ -43,14 +43,15 @@
 
 - 文件系统：
     1. 特性：类似于数据结构中的多重表，由结点 _znode_ 组成，结点可以包含内容文件，也可以包含其他 _znode_ 
-    2. znode:分为短暂和持久型
+    2. znode:分为短暂和持久型,可以在zk.create中使用CreateMode的四种枚举类型指定。
         1. 短暂型：无论任何原因导致连接断开，短暂型的znode节点都会被Zookeeper删除
         2. 持久型：**当客户端主动断开连接**，持久的znde不会被删除
 - 编码相关：
     1.  创建znode实现： 
         1. Zookeeper构造方法有多个重载，核心参数是 _zookeeper主机地址，会话超时时间，Watcher对象实例_
         2. Watcher接口，其中有一个方法progress()，与前面类似，这是一个回调方法。接受来自于Zookeeper各种事件通知的回调。
-        3. 由于 **构造方法是立刻返回的**，而这种开启服务的操作可能耗时较长，因此需要采用线程同步的方法，比如CountDownLatch,Thread.join()等方法使构造zookeeper实例的方法能够正确返回。 
+        3. 由于 **构造方法是立刻返回的**，而这种开启服务的操作可能耗时较长，因此需要采用线程同步的方法，比如CountDownLatch,Thread.join()等方法使构造zookeeper实例的方法能够正确返回。
+        4. 使用Zookeeper的实例方法create()创建所需的znode 
 ### HDFS
 
  - 概念：Hadoop的文件系统，将所有文件以块的形式存储，默认块大小是64MB（ver 2.0+是128MB 可在hdfs-site.xml中修改dfs-block-size的属性）
