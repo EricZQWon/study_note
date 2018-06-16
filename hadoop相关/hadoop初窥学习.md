@@ -9,6 +9,7 @@
     - [Hadoop Windows下安装踩过的坑](#hadoop-windows下安装踩过的坑)
         - [配置文件相关](#配置文件相关)
         - [抛出的异常类型以及处理方法](#抛出的异常类型以及处理方法)
+    - [Hadoop在Linux环境下安装(VMWare Ubuntu)踩的坑](#hadoop在linux环境下安装vmware-ubuntu踩的坑)
 - [Hadoop执行相关](#hadoop执行相关)
     - [Hadoop执行过程](#hadoop执行过程)
     - [Hadoop的分布式缓存](#hadoop的分布式缓存)
@@ -17,8 +18,6 @@
     - [InputFormat](#inputformat)
     - [FileSystem](#filesystem)
     - [Configuration](#configuration)
-
-
 ## Hadoop核心组件 ver 1.2x
 
 
@@ -40,7 +39,19 @@
  - 起因：分布式系统在通信时一种固有问题 _“部分失败”_，即消息的发送者并不能知道接受者是否正常、正确的收到了消息。
  - 特点:
     1. 简单，核心是一个精简的文件系统，提供排序和通知功能
-    1. 
+    2. 主动通知，不是被动的。
+
+- 文件系统：
+    1. 特性：类似于数据结构中的多重表，由结点 _znode_ 组成，结点可以包含内容文件，也可以包含其他 _znode_ 
+    2. znode:分为短暂和持久型,可以在zk.create中使用CreateMode的四种枚举类型指定。
+        1. 短暂型：无论任何原因导致连接断开，短暂型的znode节点都会被Zookeeper删除
+        2. 持久型：**仅当客户端主动删除(不一定是创建它的客户端)**，持久的znde才会被删除
+- 编码相关：
+    1.  创建znode实现： 
+        1. Zookeeper构造方法有多个重载，核心参数是 _zookeeper主机地址，会话超时时间，Watcher对象实例_
+        2. Watcher接口，其中有一个方法progress()，与前面类似，这是一个回调方法。接受来自于Zookeeper各种事件通知的回调。
+        3. 由于 **构造方法是立刻返回的**，而这种开启服务的操作可能耗时较长，因此需要采用线程同步的方法，比如CountDownLatch,Thread.join()等方法使构造zookeeper实例的方法能够正确返回。
+        4. 使用Zookeeper的实例方法create()创建所需的znode 
 ### HDFS
 
  - 概念：Hadoop的文件系统，将所有文件以块的形式存储，默认块大小是64MB（ver 2.0+是128MB 可在hdfs-site.xml中修改dfs-block-size的属性）
