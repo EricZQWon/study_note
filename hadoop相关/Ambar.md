@@ -37,7 +37,8 @@ Ambari使应用程序开发人员和系统集成人员能够：
     Default locale: zh_CN, platform encoding: UTF-8
     OS name: "linux", version: "4.13.0-43-generic", arch: "amd64", family: "unix"
     ```
-    4. 在/user/share/maven下 vim jms-1.1.pom文件
-    
-    1. 
+  1. JDK **8**的安装 并在Path中加入JAVA_HOME,因为JDK 8中移除了永久代，因此在设置option参数的时候，不需要再加上永久代的大小设置
+  1. 在/user/share/maven下 vim [jms-1.1.pom](https://cwiki.apache.org/confluence/display/AMBARI/Installation+Guide+for+Ambari+2.6.2) 文件
+
+  1. 由于是Ubuntu，所以默认是安装了Python、GCC的，也不用安装rpm-build，因此前期准备工作就结束了。
 
